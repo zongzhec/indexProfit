@@ -1,36 +1,45 @@
 package foo.zongzhe.indexprofit.model;
 
 import foo.zongzhe.indexprofit.entity.Fund;
+import foo.zongzhe.utils.DataUtil;
 import foo.zongzhe.utils.LogUtil;
 import java.sql.*;
-import java.util.ArrayList;
+import java.util.HashMap;
 
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
+/**
+ * 假设： 1. 每个月末存1000元； 2. 每上涨10%，便卖出10%；
+ */
 
-public class StartingPoint {
+public class StartPointBasic {
 
 	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 	static final String DB_URL = "jdbc:mysql://localhost:3306/index_profit_prod?autoReconnect=true&useSSL=false";
 	static final String USER = "root";
 	static final String PASS = "root";
-	static int input = 1000;
-	static ArrayList<Fund> funds = new ArrayList<Fund>();
 
 	static LogUtil log = new LogUtil();
+
+	static HashMap<Integer, Fund> fundMap = new HashMap<Integer, Fund>();
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		initialize();
-		getPriceData();
-		setInput();
+		getMarketData();
+		inputPerMonth();
 	}
 
-	private static void setInput() {
+	private static void inputPerMonth() {
 		// TODO Auto-generated method stub
 		
 	}
 
-	private static void getPriceData() {
+	private static void getMarketData() {
+		// TODO Auto-generated method stub
+		DataUtil dataUtil = new DataUtil();
+		fundMap = dataUtil.getDataAsMap("sh_481009");
+	}
+
+	private static void getSampleData() {
 		// TODO Auto-generated method stub
 		Connection conn = null;
 		Statement stmt = null;

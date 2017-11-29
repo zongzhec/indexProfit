@@ -18,10 +18,10 @@ public class DataUtil {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		HashMap<Integer, Fund> fundMap = new HashMap<Integer, Fund>();
-		fundMap = getDataAsMap("sh_481009");
+		// fundMap = getDataAsMap("sh_481009");
 	}
 
-	private static HashMap<Integer, Fund> getDataAsMap(String tableName) {
+	public HashMap<Integer, Fund> getDataAsMap(String tableName) {
 		// TODO Auto-generated method stub
 		Connection conn = null;
 		Statement stmt = null;
