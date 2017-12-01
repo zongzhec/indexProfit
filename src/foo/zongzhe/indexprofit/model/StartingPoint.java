@@ -14,6 +14,7 @@ public class StartingPoint {
 	static final String USER = "root";
 	static final String PASS = "root";
 	static int input = 1000;
+	static int holding = 0;
 	static ArrayList<Fund> funds = new ArrayList<Fund>();
 
 	static LogUtil log = new LogUtil();
@@ -27,7 +28,6 @@ public class StartingPoint {
 
 	private static void setInput() {
 		// TODO Auto-generated method stub
-		
 	}
 
 	private static void getPriceData() {
