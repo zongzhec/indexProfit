@@ -11,28 +11,36 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * 假设： 1. 每个月末存1000元； 2. 每上涨10%，便卖出10%；
+ * 假设： 1. 每个月末存1000元； 2. 每当净值收益达到10%，我们便出售10%的基金份额；达到20%就出售20%……以此类推。
  */
 
-public class StartPointBasic {
+public class StartPointEnhance2 {
 
 	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 	static final String DB_URL = "jdbc:mysql://localhost:3306/index_profit_prod?autoReconnect=true&useSSL=false";
 	static final String USER = "root";
 	static final String PASS = "root";
+	static final BigDecimal ZERO = new BigDecimal(0);
+	static final BigDecimal ONE = new BigDecimal(1);
+	static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
+	static final BigDecimal EQUAL_THRESHOLD = new BigDecimal(0.000000001);
+	static final BigDecimal PROFIT_THRESHOLD = new BigDecimal(0.10);
 
 	static LogUtil log = new LogUtil();
 
 	static HashMap<Integer, Fund> fundMap = new HashMap<Integer, Fund>();
 	static ArrayList<Fund> fundList = new ArrayList<Fund>();
 	static BigDecimal originInput = new BigDecimal(1000);
+	static BigDecimal avgCost = new BigDecimal(0.00);
+	static int profitCount = 0;
+	// static boolean
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
+		simulate();
 	}
 
-	public void simulate() {
+	public static void simulate() {
 		initialize();
 		getMarketData();
 		inputPerMonth();
@@ -40,7 +48,6 @@ public class StartPointBasic {
 
 	private static void inputPerMonth() {
 		// TODO Auto-generated method stub
-		String prevDate = "2009-03-05";
 		BigDecimal curAmount = new BigDecimal(0);
 		curAmount = curAmount.setScale(0, BigDecimal.ROUND_HALF_UP);
 		BigDecimal curPrice = new BigDecimal(0.00);
@@ -56,29 +63,65 @@ public class StartPointBasic {
 		allProfit = allProfit.setScale(3, BigDecimal.ROUND_HALF_UP);
 		BigDecimal allInput = new BigDecimal(0.00);
 		allInput = allInput.setScale(2, BigDecimal.ROUND_HALF_UP);
-		BigDecimal avgCost = new BigDecimal(0.00);
+		avgCost = new BigDecimal(0.00);
 		avgCost = avgCost.setScale(2, BigDecimal.ROUND_HALF_UP);
+
+		BigDecimal profitLevel = new BigDecimal(0);
+		profitLevel = profitLevel.setScale(0, BigDecimal.ROUND_HALF_UP);
+		BigDecimal curProfitLevel = new BigDecimal(0);
+		curProfitLevel = curProfitLevel.setScale(0, BigDecimal.ROUND_HALF_UP);
 
 		for (int i = 1; i < fundList.size(); i++) {
 			Fund fund = fundList.get(i);
 			String curDate = fund.getDate();
+			curPrice = BigDecimal.valueOf(fund.getPriceBalanced());
+			// 先卖后买
+			if (avgCost.subtract(ZERO).compareTo(EQUAL_THRESHOLD) > 0) {
+				curProfitLevel = curPrice.divide(avgCost, 2, BigDecimal.ROUND_DOWN).subtract(ONE);
+				// log.info("curProfitLevel1: " + curProfitLevel.toString());
+				// curProfitLevel = curProfitLevel.setScale(2, BigDecimal.ROUND_DOWN);
+				// log.info("curProfitLevel2: " + curProfitLevel.toString());
+				// log.info("compare: " + curProfitLevel.compareTo(PROFIT_THRESHOLD));
+				// log.info("compare2: " +
+				// curProfitLevel.subtract(PROFIT_THRESHOLD).compareTo(EQUAL_THRESHOLD));
+				if ((curProfitLevel.subtract(PROFIT_THRESHOLD).compareTo(EQUAL_THRESHOLD) >= 0)
+						&& (!curProfitLevel.equals(profitLevel))) {
+					curProfitLevel = curProfitLevel.setScale(1, BigDecimal.ROUND_DOWN);
+					curAmount = allAmount.multiply(curProfitLevel);
+					curAmount = curAmount.setScale(0, BigDecimal.ROUND_HALF_UP);
+					curProfit = curPrice.multiply(curAmount);
+					allProfit = allProfit.add(curProfit);
+					allAmount = allAmount.subtract(curAmount);
+					allInput = allInput.subtract(curAmount.multiply(avgCost));
+					log.info(String.format("粽子君在 %s 以每份 %s 的价格卖出了 %s 份，共计收益 %s 元", curDate, curPrice.toString(),
+							curAmount.toString(), curProfit.toString()));
+					log.info(String.format("合计：粽子君在投了 %s 元，入袋收益 %s 元。持有基金份额 %s 份，每份平均成本 %s 元。", allInput.toString(),
+							allProfit.toString(), allAmount.toString(), avgCost.toString()));
+					profitLevel = curProfitLevel;
+					profitCount++;
+					if (profitCount == 3) {
+						System.exit(0);
+					}
+				}
+			}
+
 			// Input
 			if (!curDate.substring(5, 7).equals(fundList.get(i - 1).getDate().substring(5, 7))) {
 				// it is the beginning of next month.
-				curPrice = BigDecimal.valueOf(fund.getPriceBalanced());
 				curAmount = (originInput.divide(curPrice, 0, BigDecimal.ROUND_HALF_UP));
 				curInput = curAmount.multiply(curPrice);
 				curInput = curInput.setScale(2, BigDecimal.ROUND_HALF_UP);
-				System.out.println(String.format("粽子君在 %s 以每份 %s 的价格购入了 %s 份，共计花费 %s 元", curDate, curPrice.toString(),
+				log.info(String.format("粽子君在 %s 以每份 %s 的价格购入了 %s 份，共计花费 %s 元", curDate, curPrice.toString(),
 						curAmount.toString(), curInput.toString()));
 
 				// current holding.
 				allInput = allInput.add(curInput);
 				allAmount = allAmount.add(curAmount);
 				avgCost = (allInput.divide(allAmount, 2, BigDecimal.ROUND_HALF_UP));
-				System.out.println(String.format("粽子君合计投入了 %s 元，持有基金份额 %s 份，每份平均成本 %s 元。", allInput.toString(),
-						allAmount.toString(), avgCost.toString()));
+				log.info(String.format("合计：粽子君在投了 %s 元，入袋收益 %s 元。持有基金份额 %s 份，每份平均成本 %s 元。", allInput.toString(),
+						allProfit.toString(), allAmount.toString(), avgCost.toString()));
 			}
+
 			// Output
 
 		}
