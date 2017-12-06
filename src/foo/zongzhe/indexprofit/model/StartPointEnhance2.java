@@ -24,7 +24,7 @@ public class StartPointEnhance2 {
 	static final BigDecimal ONE = new BigDecimal(1);
 	static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
 	static final BigDecimal EQUAL_THRESHOLD = new BigDecimal(0.000000001);
-	static final BigDecimal PROFIT_THRESHOLD = new BigDecimal(0.10);
+	static final BigDecimal PROFIT_THRESHOLD = new BigDecimal(0.09);
 
 	static LogUtil log = new LogUtil();
 
@@ -77,13 +77,20 @@ public class StartPointEnhance2 {
 			curPrice = BigDecimal.valueOf(fund.getPriceBalanced());
 			// 先卖后买
 			if (avgCost.subtract(ZERO).compareTo(EQUAL_THRESHOLD) > 0) {
-				curProfitLevel = curPrice.divide(avgCost, 2, BigDecimal.ROUND_DOWN).subtract(ONE);
+				curProfitLevel = curPrice.divide(avgCost, 1, BigDecimal.ROUND_DOWN).subtract(ONE);
+				// log.info("date: " + curDate + ", curPrice: " + curPrice + ", avgCost: " +
+				// avgCost + ", divide: "
+				// + curPrice.divide(avgCost, 1, BigDecimal.ROUND_DOWN));
 				// log.info("curProfitLevel1: " + curProfitLevel.toString());
 				// curProfitLevel = curProfitLevel.setScale(2, BigDecimal.ROUND_DOWN);
 				// log.info("curProfitLevel2: " + curProfitLevel.toString());
 				// log.info("compare: " + curProfitLevel.compareTo(PROFIT_THRESHOLD));
 				// log.info("compare2: " +
 				// curProfitLevel.subtract(PROFIT_THRESHOLD).compareTo(EQUAL_THRESHOLD));
+				// log.info("date: " + curDate + ", curProfitLevel: " + curProfitLevel + ",
+				// profitLevel: " + profitLevel
+				// + ", curProfitLevel.equals(profitLevel): " +
+				// curProfitLevel.equals(profitLevel));
 				if ((curProfitLevel.subtract(PROFIT_THRESHOLD).compareTo(EQUAL_THRESHOLD) >= 0)
 						&& (!curProfitLevel.equals(profitLevel))) {
 					curProfitLevel = curProfitLevel.setScale(1, BigDecimal.ROUND_DOWN);
@@ -92,16 +99,16 @@ public class StartPointEnhance2 {
 					curProfit = curPrice.multiply(curAmount);
 					allProfit = allProfit.add(curProfit);
 					allAmount = allAmount.subtract(curAmount);
-					allInput = allInput.subtract(curAmount.multiply(avgCost));
+					// allInput = allInput.subtract(curAmount.multiply(avgCost));
 					log.info(String.format("粽子君在 %s 以每份 %s 的价格卖出了 %s 份，共计收益 %s 元", curDate, curPrice.toString(),
 							curAmount.toString(), curProfit.toString()));
-					log.info(String.format("合计：粽子君在投了 %s 元，入袋收益 %s 元。持有基金份额 %s 份，每份平均成本 %s 元。", allInput.toString(),
+					log.info(String.format("合计：粽子君共投入 %s 元，入袋收益 %s 元。持有基金份额 %s 份，每份平均成本 %s 元。", allInput.toString(),
 							allProfit.toString(), allAmount.toString(), avgCost.toString()));
 					profitLevel = curProfitLevel;
 					profitCount++;
-					if (profitCount == 3) {
-						System.exit(0);
-					}
+					// if (profitCount == 3) {
+					// System.exit(0);
+					// }
 				}
 			}
 
@@ -115,16 +122,21 @@ public class StartPointEnhance2 {
 						curAmount.toString(), curInput.toString()));
 
 				// current holding.
+				avgCost = avgCost.multiply(allAmount).add(curInput).divide(curAmount.add(allAmount), 4,
+						BigDecimal.ROUND_HALF_UP);
 				allInput = allInput.add(curInput);
 				allAmount = allAmount.add(curAmount);
-				avgCost = (allInput.divide(allAmount, 2, BigDecimal.ROUND_HALF_UP));
-				log.info(String.format("合计：粽子君在投了 %s 元，入袋收益 %s 元。持有基金份额 %s 份，每份平均成本 %s 元。", allInput.toString(),
+				// avgCost = (allInput.divide(allAmount, 2, BigDecimal.ROUND_HALF_UP));
+				log.info(String.format("合计：粽子君共投入 %s 元，入袋收益 %s 元。持有基金份额 %s 份，每份平均成本 %s 元。", allInput.toString(),
 						allProfit.toString(), allAmount.toString(), avgCost.toString()));
+				profitLevel = new BigDecimal(0);
 			}
 
 			// Output
 
 		}
+		log.info(String.format("粽子君在共计收益次数 %d 次， 收益总额 %s 元", profitCount, allProfit.toString()));
+
 	}
 
 	private static void getMarketData() {
